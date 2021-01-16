@@ -1,0 +1,7 @@
+{
+	"background_color": "#ffffff",
+	"theme_color": "#333333",
+	"name": "CSE 351 Sim",
+	"display": "minimal-ui",
+	"start_url": "/",
+}

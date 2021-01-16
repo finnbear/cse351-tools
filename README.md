@@ -14,7 +14,7 @@
 ## Development
 
 1. Run `npm run dev`
-2. Navigate to the `localhost` url given, and add the base path
+2. Navigate to `http://localhost:3000/dev/integer`
 3. Page will refresh to reflect saved changes to `.svelte` files
 
 ## Export

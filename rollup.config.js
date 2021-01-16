@@ -15,7 +15,8 @@ const legacy = !!process.env.SAPPER_LEGACY_BUILD;
 
 // Assumes base path value is the last argument
 const lifecycleScript = process.env.npm_lifecycle_script.split(' ');
-const basePath = `'${lifecycleScript[lifecycleScript.length - 1]}'`;
+const lifecycleScriptLast = lifecycleScript ? lifecycleScript[lifecycleScript.length - 1] : null;
+const basePath = `'${(lifecycleScriptLast.startsWith('/') ? '' : '/') + lifecycleScriptLast}'`;
 
 const onwarn = (warning, onwarn) =>
 	(warning.code === 'MISSING_EXPORT' && /'preload'/.test(warning.message)) ||

@@ -273,7 +273,9 @@
 			throw new Error('Cannot free unused block');
 		}
 
-		yield `Found block with sizes ${allocBlock.size} at offset ${fmtHex(allocBlock.offset)}.`;
+		highlightedBlock = allocBlock;
+
+		yield `Found block with size ${allocBlock.size} at offset ${fmtHex(allocBlock.offset)}.`;
 
 		// Free the block
 		allocBlock.used = false;
@@ -284,6 +286,8 @@
 		insertFreeBlock(allocBlock);
 
 		yield 'Block freed.';
+
+		highlightedBlock = null;
 
 		// Update history
 		history += `f ${allocBlock.id}\n`
@@ -359,6 +363,11 @@
 				</g>
 			{/each}
 
+			<!-- Highlighted Block -->
+			{#if highlightedBlock}
+				<rect class='highlight' x={padding + highlightedBlock.offset / WORD_SIZE * wordWidth} y={padding} width={highlightedBlock.size / WORD_SIZE * wordWidth} height={wordHeight}/>
+			{/if}
+
 			<!-- Free List Head Arrow -->
 			{#if freeListHead}
 				<path
@@ -416,6 +425,12 @@
 	rect.border {
 		fill: none;
 		stroke: #111111;
+		stroke-width: 4px;
+	}
+
+	rect.highlight {
+		fill: none;
+		stroke: yellow;
 		stroke-width: 4px;
 	}
 

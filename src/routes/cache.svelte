@@ -164,8 +164,8 @@
 			}
 			done = line.startsWith(HISTORY_CURSOR);
 
-			const parseR = line.match(/R\( *0x([0-9a-f]{2}) *\)/i);
-			const parseW = line.match(/W\( *0x([0-9a-f]{2}) *, *0x([0-9a-f]{2}) *\)/i);
+			const parseR = line.match(/R\( *0x([0-9a-f]+) *\)/i);
+			const parseW = line.match(/W\( *0x([0-9a-f]+) *, *0x([0-9a-f]+) *\)/i);
 			const parseF = line.match(/cache flushed/i);
 			if (parseR == null && parseW == null && parseF == null) {
 				continue;

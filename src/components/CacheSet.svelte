@@ -12,9 +12,11 @@
 	export let writeMiss;
 	export let replacement;
 
+	// Array of refs (WARNING: May contain invalid data if set size is decreased,
+	// which never happens as sets are recreated when that happens)
 	let lines = [];
 
-	// For LRU, FIFO, etc.
+	// Monotonic counter for LRU, FIFO, etc.
 	let counter = 0;
 
 	function getLine(address) {
@@ -40,12 +42,13 @@
 		if (!line) {
 			switch (replacement) {
 				case REPLACEMENT_LRU:
-					line = minLine('use');
+					line = minLine('use'); // least recently USEd
 					break;
 				case REPLACEMENT_FIFO:
-					line = minLine('in');
+					line = minLine('in'); // first IN first out
 					break;
 				case REPLACEMENT_RANDOM:
+					// TODO: Seed random in a repeatable way
 					line = lines[Math.floor(Math.random() * lines.length)];
 					break;
 			}
@@ -63,11 +66,14 @@
 		return line;
 	}
 
+	// Updates LRU
 	function accessLine(line) {
 		counter++;
 		line.use = counter;
 	}
 
+	// Helper function to format the tag of an address (not reactive to other
+	// parameters)
 	function fmtTag(address) {
 		const size = tagSize(addressSize, cacheSize, blockSize, associativity);
 		if (size > 0) {
@@ -76,16 +82,22 @@
 		return "N/A";
 	}
 
+	// Helper function to format the index of an address (not reactive to other
+	// parameters)
 	function fmtIndex(address) {
 		const index = getIndex(address, cacheSize, blockSize, associativity);
 		const size = indexSize(cacheSize, blockSize, associativity);
 		return fmtBinary(index, size)
 	}
 
+	// Helper function to format the offset of an address (not reactive to other
+	// parameters)
 	function fmtOffset(address) {
 		return fmtBinary(getOffset(address, blockSize), offsetSize(blockSize));
 	}
 
+	// Uses yield keyboard to return step by step status information without
+	// extra context-switching logic
 	export function* read(memory, address, log, updateStats) {
 		yield `Tag identified as ${fmtTag(address)}`;
 		yield `Set index identified as ${fmtIndex(address)}`;
@@ -151,6 +163,7 @@
 		}
 	}
 
+	// Flush all dirty lines to memory
 	export function flush(memory, log) {
 		for (const line of lines) {
 			if (line.isDirty()) {
@@ -159,6 +172,7 @@
 		}
 	}
 
+	// Clear all lines
 	export function clear() {
 		for (const line of lines) {
 			line.clear();

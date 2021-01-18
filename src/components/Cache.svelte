@@ -1,13 +1,8 @@
 <script context='module'>
 	import {fmtHex} from './Binary.svelte';
-	import {log2} from '../scripts/math.js';
+	import {log2, maxUnsigned} from '../scripts/math.js';
 
-	export const wordSize = 8; // bytes
-
-	function maxUnsigned(bits) {
-		return Math.pow(2, bits) - 1;
-	}
-
+	// Below functions are self-explanatory. Sizes are in bits.
 	export function cacheLineCount(cacheSize, blockSize) {
 		return cacheSize / blockSize;
 	}
@@ -71,6 +66,7 @@
 	import CacheSet from './CacheSet.svelte';
 	import Container from './Container.svelte';
 
+	// Settings (and their default values)
 	export let name = 'Cache';
 	export let colspan = null;
 	export let selectedAddress = null;
@@ -81,9 +77,12 @@
 	export let writeHit = WRITE_HIT_BACK;
 	export let writeMiss = WRITE_MISS_ALLOCATE;
 	export let replacement = REPLACEMENT_LRU;
+
+	// Statistics
 	export let hits = 0;
 	export let misses = 0;
 
+	// Array of refs (WARNING: may contain invalid data if cache size decreases)
 	export let sets = [];
 
 	function getSet(address) {

@@ -2,6 +2,8 @@
 	import Select from './Select.svelte';
 	import Slider from './Slider.svelte';
 
+	// TODO: Rename to something less confusing than OptionsSlider
+
 	export let name;
 	export let colspan = null;
 	export let description = '';

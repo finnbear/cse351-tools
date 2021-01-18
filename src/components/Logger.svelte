@@ -13,8 +13,10 @@
 	}
 
 	let textArea; // ref
+
 	afterUpdate(() => {
 		if (textArea) {
+			// Always scroll to the bottom
 			textArea.scrollTop = textArea.scrollHeight;
 		}
 	});

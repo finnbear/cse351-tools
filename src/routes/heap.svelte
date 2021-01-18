@@ -4,14 +4,20 @@
 	import Heap, {EXPLAIN_OPTIONS, EXPLAIN_ON, EXPLAIN_OFF} from '../components/Heap.svelte';
 	import Integer from '../components/Integer.svelte';
 	import Select from '../components/Select.svelte';
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
+	// Parameters
 	let explain = EXPLAIN_OFF;
-	let mallocSizeBigInt = new big.BigInteger('4');
+	let mallocSizeBigInt = new BigInteger('4');
+
+	// mallocSize is more useful as a normal number, so maintain such a copy
 	$: mallocSize = parseInt(mallocSizeBigInt.toString());
+
+	// Status message
 	let status = '';
 
-	let heap; // ref
+	// Compnent ref
+	let heap;
 
 	// Button actions
 	let mallocTx;
@@ -69,6 +75,7 @@
 		} while (explain === EXPLAIN_OFF);
 	}
 
+	// Automatically initiates the process of saving a history file
 	function doExport() {
 		const link = document.createElement('a');
 		link.download = 'heap.rep';

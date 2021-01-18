@@ -1,6 +1,9 @@
 <script context=module>
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
+	// TODO: Needlessly allocates BigIntegers (performance is fine though)
+
+	// Helper function (do not call directly)
 	function fmtBase(number, base, digits, prefix) {
 		if (number == null) {
 			if (digits < 1) {
@@ -16,10 +19,12 @@
 		return (negative ? '-' : '') + prefix + str.padStart(digits, '0');
 	}
 
+	// Format a number in binary with an optional prefix and minimum bits
 	export function fmtBinary(number, bits, prefix = true) {
 		return fmtBase(number, 2, bits, prefix ? '0b' : '');
 	}
 
+	// Format a number in hexadecimal with an optional prefix and minimum digits
 	export function fmtHex(number, hexDigits, prefix = true) {
 		return fmtBase(number, 16, hexDigits, prefix ? '0x' : '');
 	}
@@ -33,21 +38,23 @@
 	export const ENDIANNESS_BIG = 'big';
 	export const ENDIANNESS_OPTIONS = [ENDIANNESS_IGNORED, ENDIANNESS_LITTLE, ENDIANNESS_BIG];
 
+	// Get minimum value representable by size in form
 	export function getMinValue(size, form) {
 		switch (form) {
 			case FORM_UNSIGNED:
-				return new big.BigInteger('0');
+				return new BigInteger('0');
 			case FORM_TWOS_COMPLEMENT:
-				return (new big.BigInteger('2')).pow(size - 1).multiply(new big.BigInteger('-1'));
+				return (new BigInteger('2')).pow(size - 1).multiply(new BigInteger('-1'));
 		}
 	}
 
+	// Get maximum value representable by size in form
 	export function getMaxValue(size, form) {
 		switch (form) {
 			case FORM_UNSIGNED:
-				return (new big.BigInteger('2')).pow(size).add(new big.BigInteger('-1'));
+				return (new BigInteger('2')).pow(size).add(new BigInteger('-1'));
 			case FORM_TWOS_COMPLEMENT:
-				return (new big.BigInteger('2')).pow(size - 1).add(new big.BigInteger('-1'));
+				return (new BigInteger('2')).pow(size - 1).add(new BigInteger('-1'));
 		}
 	}
 </script>
@@ -62,7 +69,7 @@
 	export let size = 1;
 	export let form = FORM_UNSIGNED;
 	export let endianness = ENDIANNESS_IGNORED;
-	export let value = new big.BigInteger('0');
+	export let value = new BigInteger('0');
 	export let fmt = (value, size) => `${fmtBinary(encodeForm(value, size, form), size)} = ${encodeForm(value, size, form)} = ${fmtHex(encodeForm(value, size, form), Math.ceil(size / 4))}`
 	export let readOnly = false;
 	export let onChange = null;
@@ -74,7 +81,7 @@
 			case FORM_UNSIGNED:
 				return number;
 			case FORM_TWOS_COMPLEMENT:
-				if (number.compareTo(new big.BigInteger('0')) >= 0) {
+				if (number.compareTo(new BigInteger('0')) >= 0) {
 					// Positive numbers map cleanly to the unsigned range
 					return number;
 				}
@@ -83,7 +90,7 @@
 				for (let i = 0; i < size; i++) {
 					complement = complement.flipBit(i);
 				}
-				complement = complement.add(new big.BigInteger('1'));
+				complement = complement.add(new BigInteger('1'));
 				complement = complement.clearBit(size + 1);
 				return complement;
 		}
@@ -100,7 +107,7 @@
 					for (let i = 0; i < size; i++) {
 						complement = complement.flipBit(i);
 					}
-					return complement.add(new big.BigInteger('1')).negate();
+					return complement.add(new BigInteger('1')).negate();
 				}
 				return formedNumber;
 		}
@@ -118,7 +125,7 @@
 	}
 
 	function overflow(number) {
-		return number.mod(getMaxValue(size, FORM_UNSIGNED).add(new big.BigInteger('1')));
+		return number.mod(getMaxValue(size, FORM_UNSIGNED).add(new BigInteger('1')));
 	}
 
 	function setValueBit(position, bitValue) {
@@ -144,8 +151,10 @@
 		return bits;
 	}
 
+	// Keep display bits up to date
 	$: displayBits = getDisplayBits(value, size, form, endianness);
 
+	// Exported utitily functions
 	export function shiftLeft() {
 		let encoded = encodeForm(value, size, form);
 		for (let i = size - 1; i > 0; i--) {
@@ -172,7 +181,7 @@
 
 	export function increment() {
 		let encoded = encodeForm(value, size, form);
-		encoded = encoded.add(new big.BigInteger('1'));
+		encoded = encoded.add(new BigInteger('1'));
 		encoded = overflow(encoded);
 		value = decodeForm(encoded, size, form);
 		onChange && onChange(value);

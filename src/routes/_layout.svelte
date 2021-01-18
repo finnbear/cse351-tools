@@ -4,6 +4,7 @@
 
 	export let segment;
 
+	// Map of path (must match src/routes filenames) to title
 	const pages = {
 		'integer': 'Integer Sim',
 		'float': 'Floating Point Sim',
@@ -16,7 +17,7 @@
 <main>
 	<h1>CSE 351 Tools</h1>
 	<Nav {pages} currentPath={segment}/>
-	{#key segment}
+	{#key segment} <!-- Recreates contents when path updates, to play transition -->
 		<div transition:slide>
 			<slot/>
 		</div>

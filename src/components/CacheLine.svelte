@@ -1,4 +1,5 @@
 <script context='module'>
+	// Returns an array with count of item
 	function arrayOf(count, item) {
 		const arr = [];
 		for (let i = 0; i < count; i++) {
@@ -28,35 +29,45 @@
 	let data = [];
 	let dataDirty;
 
+	// Sets the dirty flag for a given offset to a given new value
 	function setDirty(offset, newValue) {
 		dataDirty[offset] = newValue;
 		dataDirty = dataDirty; // trigger Svelte update
 	}
 
+	// Returns true if all elements are non-null
 	function allNonNull(arr) {
 		return arr.every(item => item != null);
 	}
 
+	// Exported function for querying if line is valid
 	export function isValid() {
 		return allNonNull(data);
 	}
 
+	// Return true if all elements are truthy
 	function anyTrue(arr) {
 		return arr.some(val => val);
 	}
 
+	// Exported function for querying if line is dirty
 	export function isDirty() {
 		return anyTrue(dataDirty) && isValid();
 	}
 
+	// Exported function for querying the tag of the line based on its address
+	// Returns null if address does not exist
 	export function getLineTag() {
 		return getTag(address, addressSize, cacheSize, blockSize, associativity);
 	}
 
+	// Reads a byte of data at the offset
 	export function read(offset) {
 		return data[offset];
 	}
 
+	// Writes a byte of data at the offset (setting the cooresponding dirty flag
+	// by default)
 	export function write(offset, byte, makeDirty = true) {
 		data[offset] = byte;
 		if (makeDirty) {
@@ -64,10 +75,12 @@
 		}
 	}
 
+	// Aligns an address to the block size
 	function align(address) {
 		return Math.floor(address / blockSize) * blockSize;
 	}
 
+	// Populates the cache line from memory
 	export function load(memory, addr) {
 		address = align(addr);
 		for (let offset = 0; offset < blockSize; offset++) {
@@ -76,6 +89,7 @@
 		}
 	}
 
+	// Flushes the cache line to memory
 	export function flush(memory) {
 		if (address == null || !isValid()) {
 			return;
@@ -86,13 +100,15 @@
 		}
 	}
 
+	// Clears the cache line, making it invalid
 	export function clear() {
 		address = null;
 		data = arrayOf(blockSize, null);
 		dataDirty = arrayOf(blockSize, false);
 	}
 
-	$: clear(blockSize); // trigger clear on blockSize change
+	// trigger clear on blockSize change
+	$: clear(blockSize);
 </script>
 
 <tr>

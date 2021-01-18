@@ -5,12 +5,14 @@
 	import Integer from '../components/Integer.svelte';
 	import Select from '../components/Select.svelte';
 	import OptionsSlider from '../components/OptionsSlider.svelte';
-
 	import big from 'bigdecimal';
 
+	// Parameters
 	let size = 8; // bits
 	let endianness = ENDIANNESS_IGNORED;
 	let form = FORM_UNSIGNED;
+
+	// Value stored by the integer (signed or unsigned, depending on form)
 	let value = new big.BigInteger('0');
 
 	// Function bindings

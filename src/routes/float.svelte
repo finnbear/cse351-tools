@@ -1,62 +1,68 @@
 <script context=module>
-	import big from 'bigdecimal';
+	import {BigDecimal, BigInteger} from 'bigdecimal';
+	import {maxUnsigned} from '../scripts/math.js';
 
+	// Handles fractional binary and (de)normalization
 	function decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue) {
-		let mantissa = new big.BigDecimal(exponentValue.compareTo(new big.BigInteger('0')) == 0 ? '0' : '1');
-		const mantissaSizetring = mantissaValue.toString(2).padStart(mantissaSize, '0');
-		for (let i = 0; i < mantissaSizetring.length; i++) {
-			if (mantissaSizetring[i] == '1') {
-				mantissa = mantissa.add((new big.BigDecimal('0.5')).pow(i + 1));
+		let mantissa = new BigDecimal(exponentValue.compareTo(new BigInteger('0')) == 0 ? '0' : '1');
+		const mantissaBitsString = mantissaValue.toString(2).padStart(mantissaSize, '0');
+		for (let i = 0; i < mantissaBitsString.length; i++) {
+			if (mantissaBitsString[i] == '1') {
+				mantissa = mantissa.add((new BigDecimal('0.5')).pow(i + 1));
 			}
 		}
 		return mantissa;
 	}
 
+	// Returns a BigDecimal of 2^power for any integer power
 	function powerOf2(power) {
 		if (power >= 0) {
-			return (new big.BigDecimal('2')).pow(power);
+			return (new BigDecimal('2')).pow(power);
 		}
-		return (new big.BigDecimal('1')).divide((new big.BigDecimal('2')).pow(-power));
+		return (new BigDecimal('1')).divide((new BigDecimal('2')).pow(-power));
 	}
 
+	// Returns the max representable value of a float with the given exponent
+	// and mantissa sizes
 	function maxValue(exponentSize, mantissaSize) {
-		return powerOf2(exponentBias(exponentSize)).multiply((new big.BigDecimal('2')).subtract((new big.BigDecimal('1')).divide(powerOf2(mantissaSize))));
+		return powerOf2(exponentBias(exponentSize)).multiply((new BigDecimal('2')).subtract((new BigDecimal('1')).divide(powerOf2(mantissaSize))));
 	}
 
+	// Takes a string and encodes it to an a sign, exponent, and mantissa
 	function encodeStr(value, exponentSize, mantissaSize) {
-		const sign = new big.BigInteger(value.startsWith('-') ? '1' : '0');
+		const sign = new BigInteger(value.startsWith('-') ? '1' : '0');
 
 		let parsed;
 		try {
-			 parsed = (new big.BigDecimal(value)).abs();
+			 parsed = (new BigDecimal(value)).abs();
 		} catch (err) {
 			if (value.toLowerCase() == 'infinity' || value.toLowerCase() == '-infinity') {
-				return {sign, exponent: new big.BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new big.BigInteger('0')};
+				return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('0')};
 			}
-			return {sign, exponent: new big.BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new big.BigInteger('1')};
+			return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('1')};
 		}
 
-		if (parsed.compareTo(new big.BigDecimal('0')) == 0) {
-			return {sign, exponent: new big.BigInteger('0'), mantissa: new big.BigInteger('0')};
+		if (parsed.compareTo(new BigDecimal('0')) == 0) {
+			return {sign, exponent: new BigInteger('0'), mantissa: new BigInteger('0')};
 		}
 
 		if (parsed.compareTo(maxValue(exponentSize, mantissaSize)) > 0) {
 			// Infinities
-			return {sign, exponent: new big.BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new big.BigInteger('0')};
+			return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('0')};
 		}
 
 		let ln2 = 0;
-		const oneCmp = parsed.compareTo(new big.BigDecimal('1'));
+		const oneCmp = parsed.compareTo(new BigDecimal('1'));
 		let tmp = parsed;
 		if (oneCmp > 0) { // greater than one
 			ln2--;
-			while (tmp.compareTo(new big.BigDecimal('1')) >= 0) {
-				tmp = tmp.divide(new big.BigDecimal('2'));
+			while (tmp.compareTo(new BigDecimal('1')) >= 0) {
+				tmp = tmp.divide(new BigDecimal('2'));
 				ln2++;
 			}
 		} else if (oneCmp < 0) { // less than one
-			while (tmp.compareTo(new big.BigDecimal('1')) < 0) {
-				tmp = tmp.multiply(new big.BigDecimal('2'));
+			while (tmp.compareTo(new BigDecimal('1')) < 0) {
+				tmp = tmp.multiply(new BigDecimal('2'));
 				ln2--;
 			}
 		}
@@ -64,27 +70,28 @@
 		let exponent, mantissaDecimal;
 
 		if (ln2 >= 1 - exponentBias(exponentSize)) {
-			exponent = new big.BigInteger(`${ln2 + exponentBias(exponentSize)}`);
+			exponent = new BigInteger(`${ln2 + exponentBias(exponentSize)}`);
 			mantissaDecimal = parsed.multiply(powerOf2(mantissaSize - ln2)).subtract(powerOf2(mantissaSize));
 		} else {
-			exponent = new big.BigInteger('0');
+			exponent = new BigInteger('0');
 			mantissaDecimal = parsed.divide(powerOf2(1 - exponentBias(exponentSize) - mantissaSize));
 		}
 
 		let mantissa = mantissaDecimal.toBigInteger();
 
 		// round
-		if (mantissaDecimal.subtract(new big.BigDecimal(mantissa.toString())).compareTo(new big.BigDecimal('0.5')) >= 0) {
-			mantissa = mantissa.add(new big.BigInteger('1'));
+		if (mantissaDecimal.subtract(new BigDecimal(mantissa.toString())).compareTo(new BigDecimal('0.5')) >= 0) {
+			mantissa = mantissa.add(new BigInteger('1'));
 		}
 
 		return {sign, exponent, mantissa};
 	}
 
-	// Returns a type that is stringifyable and, if possible, BigDecimal
+	// Returns a type that is stringifyable and, if possible, a BigDecimal,
+	// based on the sign, exponent, and mantissa
 	function decode(signValue, exponentSize, exponentValue, mantissaSize, mantissaValue) {
-		const negative = signValue.compareTo(new big.BigInteger('1')) == 0;
-		const sign = new big.BigDecimal(negative ? '-1' : '1');
+		const negative = signValue.compareTo(new BigInteger('1')) == 0;
+		const sign = new BigDecimal(negative ? '-1' : '1');
 		const mantissa = decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue);
 
 		let exponent = 0;
@@ -95,16 +102,16 @@
 			}
 		}
 
-		if (exponent == 0 && mantissaValue.compareTo(new big.BigDecimal('0')) == 0) {
+		if (exponent == 0 && mantissaValue.compareTo(new BigDecimal('0')) == 0) {
 			// BigDecimal cannot encode negative zero
-			const bigZero = new big.BigDecimal('0');
+			const bigZero = new BigDecimal('0');
 			return {str: negative ? '-0' : '0', big: bigZero, exponent: 'Zero', mantissa: 'Zero'};
 		}
-		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new big.BigDecimal('0')) == 0) {
+		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new BigDecimal('0')) == 0) {
 			// BigDecimal has no concept of infinity
 			return {str: negative ? '-Infinity' : 'Infinity', exponent: 'All Ones', mantissa: 'Zero'};
 		}
-		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new big.BigDecimal('0')) != 0) {
+		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new BigDecimal('0')) != 0) {
 			// BigDecimal has no concept of NaN
 			return {str: 'NaN', exponent: 'All Ones', mantissa: 'Non-Zero'};
 		}
@@ -117,21 +124,14 @@
 		return {str: result.toString(), big: result, exponent, mantissa};
 	}
 
+	// Returns a new BigInteger represeting the combined bits of the sign,
+	// exponent, and mantissa (expressed as an unsigned value)
 	function combineBits(sign, exponentSize, exponent, mantissaSize, mantissa) {
 		return sign.shiftLeft(mantissaSize + exponentSize).or(exponent.shiftLeft(mantissaSize)).or(mantissa);
 	}
 
-	function stringifyNumber(number) {
-		if (Object.is(number, -0)) {
-			return '-0';
-		}
-		return '' + number;
-	}
-
-	function maxUnsigned(bits) {
-		return Math.pow(2, bits) - 1;
-	}
-
+	// Returns the exponent bias for a given exponent size, such as 127 in the
+	// case of an 8 bit exponent
 	function exponentBias(exponentSize) {
 		return maxUnsigned(exponentSize - 1);
 	}
@@ -143,11 +143,15 @@
 	import Text from '../components/Text.svelte';
 	import Slider from '../components/Slider.svelte';
 
-	let sign = new big.BigInteger('0');
-	let exponent = new big.BigInteger('0');
-	let mantissa = new big.BigInteger('0');
+	// Encoded values
+	let sign = new BigInteger('0');
+	let exponent = new BigInteger('0');
+	let mantissa = new BigInteger('0');
+
+	// Text input
 	let textValue = '';
 
+	// Encoding parameters
 	let mantissaSize = 23;
 	let exponentSize = 8;
 
@@ -155,9 +159,13 @@
 		textValue = '';
 	}
 
+	// Keeps combinedBits up to date by running every time any parameter changes
 	$: combinedBits = combineBits(sign, exponentSize, exponent, mantissaSize, mantissa);
 
+	// Keeps decoded up to date by running every time any parameter changes
 	$: decoded = decode(sign, exponentSize, exponent, mantissaSize, mantissa);
+
+	// Process text input when it changes, or when a related parameter changes
 	$: {
 		if (textValue) {
 			const encoded = encodeStr(textValue, exponentSize, mantissaSize);
@@ -170,7 +178,7 @@
 
 <table>
 	<tr>
-		<Binary name='Sign Bit' size={1} fmt={sign => sign.compareTo(new big.BigInteger('1')) == 0 ? 'Negative' : 'Positive'} bind:value={sign} onChange={clearText}/>
+		<Binary name='Sign Bit' size={1} fmt={sign => sign.compareTo(new BigInteger('1')) == 0 ? 'Negative' : 'Positive'} bind:value={sign} onChange={clearText}/>
 	</tr>
 	<tr>
 		<Slider name='Exponent Size' description='The size, in bits, of the exponent' min={1} max={11} bind:value={exponentSize}/>
@@ -195,7 +203,7 @@
 	</tr>
 	{#if textValue && decoded.big}
 		<tr>
-			<Container name={`Conversion Error From Target Value`} description={'The exact value of the float minus the target value'}><span>{decoded.big.subtract(new big.BigDecimal(textValue))}</span></Container>
+			<Container name={`Conversion Error From Target Value`} description={'The exact value of the float minus the target value'}><span>{decoded.big.subtract(new BigDecimal(textValue))}</span></Container>
 		</tr>
 	{/if}
 </table>

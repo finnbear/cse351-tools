@@ -3,6 +3,7 @@
 	export let selected;
 </script>
 
+<!-- process.env.BASE_PATH will be templated in at bundle-time -->
 <a class:selected href={`${process.env.BASE_PATH}/${path}`}>
 	<slot/>
 </a>

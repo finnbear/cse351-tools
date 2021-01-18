@@ -4,19 +4,25 @@
 	import Slider from '../components/Slider.svelte';
 	import Integer from '../components/Integer.svelte';
 	import Select from '../components/Select.svelte';
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
+	// Parameters
 	let rowCount = 4;
 	let columnCount = 4;
 	let dataSize = 1;
-	let startAddress = new big.BigInteger('0');
+	let startAddress = new BigInteger('0');
 	let ordering = 'Row-major';
 
+	// Create an array of rows to iterate over, only when the sizes change
 	$: rows = Array(rowCount);
 	$: columns = Array(columnCount);
 
+	// An object of the form {row: #, column: #}, null if no cell is hovered
 	let hovered = null;
 
+	// Return the address, as a BigInteger, of the given row and column
+	// Take additional params that would change the result if they were updated
+	// to be reactive to such an update
 	function computeAddress(row, column, rowCount, columnCount, ordering, dataSize, startAddress) {
 		let offset;
 
@@ -26,7 +32,7 @@
 			offset = row * columnCount + column;
 		}
 
-		return startAddress.add(new big.BigInteger(`${offset * dataSize}`));
+		return startAddress.add(new BigInteger(`${offset * dataSize}`));
 	}
 </script>
 

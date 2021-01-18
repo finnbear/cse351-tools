@@ -1,13 +1,16 @@
 <script>
 	import {fmtBinary, fmtHex} from './Binary.svelte';
 	import Container from './Container.svelte';
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
 	export let name;
 	export let colspan = null;
 	export let description = '';
 	export let disabled = null;
-	export let value = new big.BigInteger('0');
+	export let value = new BigInteger('0');
+
+	// Maintain the user's preferred format (a function that formats a number
+	// to a string)
 	let format = fmtHex;
 
 	function fmtDec(number) {
@@ -16,33 +19,34 @@
 
 	let text = '';
 
+	// Parse the user input string to a BigInteger and set the preferred format
 	function parse(str) {
 		text = str;
 
 		if (str) {
 			try {
 				if (str.startsWith('0x')) {
-					value = new big.BigInteger(str.substring(2) || '0', 16);
+					value = new BigInteger(str.substring(2) || '0', 16);
 					format = fmtHex;
 				}
 				if (str.startsWith('0b')) {
-					value = new big.BigInteger(str.substring(2) || '0', 2);
+					value = new BigInteger(str.substring(2) || '0', 2);
 					format = fmtBinary;
 				}
-				value = new big.BigInteger(str);
+				value = new BigInteger(str);
 				format = fmtDec;
 			} catch (err) {}
 
 			return;
 		}
 
-		value = new big.BigInteger('0');
+		value = new BigInteger('0');
 		format = null;
 	}
 </script>
 
 <Container {name} {description} {colspan}>
-	<input type='text' {disabled} placeholder='0x00' value={format && value.compareTo(new big.BigInteger('0')) != 0 ? format(value) : text} on:input={e => parse(e.target.value)}/>
+	<input type='text' {disabled} placeholder='0x00' value={format && value.compareTo(new BigInteger('0')) != 0 ? format(value) : text} on:input={e => parse(e.target.value)}/>
 </Container>
 
 <style>

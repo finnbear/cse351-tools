@@ -1,5 +1,5 @@
 <script>
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
 	export let significance = 0;
 	export let value = false;
@@ -12,7 +12,7 @@
 	}
 </script>
 
-<button title={(new big.BigInteger('1')).shiftLeft(significance)} class:set={value} class:separate={separateBytes && significance % 8 == 0} on:click={toggleValue}>{value ? 1 : 0}</button>
+<button title={(new BigInteger('1')).shiftLeft(significance)} class:set={value} class:separate={separateBytes && significance % 8 == 0} on:click={toggleValue}>{value ? 1 : 0}</button>
 
 <style>
 	button {

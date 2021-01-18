@@ -1,13 +1,11 @@
 <script context='module'>
 	import {fmtHex} from './Binary.svelte';
+	import {maxUnsigned} from '../scripts/math.js';
 
 	export const wordSize = 8; // bytes
 
-	function maxUnsigned(bits) {
-		return Math.pow(2, bits) - 1;
-	}
-
 	function randomByte() {
+		// TODO: Use seeded random (not that the memory contents matter)
 		return Math.floor(Math.random() * 255);
 	}
 
@@ -45,9 +43,12 @@
 
 	$: {
 		if (address != null) {
+			// Make sure the address stays valid
 			address = Math.min(address, maxUnsigned(addressSize));
 		}
 	}
+
+	// Refill memory with random data whenever addressSize changes
 	$: data = randomData(addressSize);
 </script>
 

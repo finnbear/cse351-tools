@@ -10,6 +10,7 @@
 	const addressFont = 20;
 	const freeFont = 15;
 
+	// Returns an array of all blocks in the heap
 	export function getBlocks(heapHead) {
 		let block = heapHead;
 		const blocks = [];
@@ -20,6 +21,7 @@
 		return blocks;
 	}
 
+	// Links two blocks
 	function setNextAndPrev(from, to) {
 		if (from) {
 			from.next = to;
@@ -51,6 +53,9 @@
 	let blockIDCount = 0;
 	let history = '';
 
+	// The following was adapted from
+	// https://courses.cs.washington.edu/courses/cse351/heapsim/
+
 	const initialBlock = {
 		size,
 		offset: 0,
@@ -61,10 +66,14 @@
 	let heapHead = initialBlock;
 	let highlightedBlock = null;
 
+	// Causes the view to update
 	function refreshDisplay() {
-		heapHead = heapHead; // Causes Svelte to update
+		// The view code reacts to assignments to this variable
+		heapHead = heapHead;
 	}
 
+	// Returns first free block in the free list with sufficient size,
+	// otherwise null
 	function findFreeBlock(requiredSize) {
 		let freeBlock = freeListHead;
 		while (freeBlock) {
@@ -77,6 +86,8 @@
 		return null;
 	}
 
+	// Returns the block matching a given pointer to its data (not header),
+	// otherwise null
 	function getBlockWithPayloadOffset(payload) {
 		let block = heapHead;
 		while (block.offset + WORD_SIZE <= payload) {
@@ -88,6 +99,7 @@
 		return null;
 	}
 
+	// Prepends a block to the free list
 	function insertFreeBlock(block) {
 		setNextAndPrev(block, freeListHead);
 		freeListHead = block;
@@ -95,6 +107,7 @@
 		refreshDisplay();
 	}
 
+	// Removes a block from the free list
 	function removeFreeBlock(block) {
 		if (!block.prev) {
 			// First in free list
@@ -144,6 +157,7 @@
 		return block;
 	}
 
+	// Expands the heap (within limits)
 	function requestMoreSpace(reqSpace) {
 		let lastBlock = heapHead;
 		while (lastBlock.foll) {
@@ -178,6 +192,8 @@
 		refreshDisplay();
 	}
 
+	// Uses yield keyboard to return step by step status information without
+	// extra context-switching logic
 	export function* malloc(requestedSize) {
 		// Step 1: Calculate required size
 		let requiredSize = (Math.floor(requestedSize / WORD_SIZE) + Math.sign(requestedSize % WORD_SIZE)) * WORD_SIZE;
@@ -300,16 +316,20 @@
 		return;
 	}
 
+	// Gets a data URI of the operation history in standard format
 	export function getHistory() {
 		// metadata: unused, num block ids, num ops, unused
 		return content = `data:text/plain;charset=utf-8,0\n${blockIDCount}\n${splitLines(history).length}\n0\n${history}`;
 	}
 
+	// Returns data representing an SVG arc between two x and y coordinates
 	function svgArcD(fromX, fromY, toX, toY) {
+		// 3 is arbitrary; larger values mean less deflection
 		const dist = Math.hypot(toX - fromX, toY - fromY) * 3;
 		return `M${fromX},${fromY}A${dist},${dist} 0 0,1 ${toX},${toY}`;
 	}
 
+	// For efficiency, construct the array of blocks once per heapHead change
 	$: blocks = getBlocks(heapHead);
 </script>
 
@@ -317,6 +337,7 @@
 	<div class=heap>
 		<svg width={padding * 2 + (size / WORD_SIZE) * wordWidth} height={padding * 2 + wordHeight + addressFont * 2}>
 			<defs>
+				<!-- TODO: Multiple color arrow heads without code duplication -->
 				<marker
 					id='arrow'
 					viewBox='0 0 10 10'
@@ -330,9 +351,12 @@
 					<path d='M 0 0 L 10 5 L 0 10 z'/>
 				</marker>
 			</defs>
+
+			<!-- Addresses -->
 			{#each Array(size / WORD_SIZE) as _, wordIndex}
 				<text class='address' x={wordIndex * wordWidth} y={padding + wordHeight + addressFont + (wordIndex % 2) * addressFont} font-size={`${addressFont}px`} alignment-baseline='middle'>{fmtHex(wordIndex * 8, 4)}</text>
 			{/each}
+
 			{#each blocks as block}
 				<g on:click={() => onFree && onFree(block.offset + WORD_SIZE)}>
 					<!-- Background -->
@@ -397,7 +421,9 @@
 			{/each}
 		</svg>
 	</div>
-	<p>Blocks have a pink header, describing their size, whether they are used, and whether the previous block is used. Unused blocks also have a blue previous and next pointer, and an orange footer.
+	<p>Blocks have a pink header, describing their size, whether they are used,
+	and whether the previous block is used. Unused blocks also have a blue
+	previous and next pointer, and an orange footer.</p>
 </Container>
 
 <style>

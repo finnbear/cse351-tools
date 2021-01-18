@@ -11,14 +11,13 @@
 	import Slider from '../components/Slider.svelte';
 	import {log2} from '../scripts/math.js';
 	import {splitLines, plural} from '../scripts/strings.js';
-	import big from 'bigdecimal';
+	import {BigInteger} from 'bigdecimal';
 
-	const wordSize = 8;
 	const HISTORY_CURSOR = '>';
 
-	// Settings
+	// Parameter
 	let address;
-	let value = new big.BigInteger('255');
+	let value = new BigInteger('255');
 	let addressSize = 8;
 	let cacheSize = 64;
 	let blockSize = 8;
@@ -28,18 +27,17 @@
 	let replacement = REPLACEMENT_LRU;
 	let explain = EXPLAIN_OFF;
 
+	// Returns a percentage with two decimal places and a percent sign
 	function fmtPercent(value, total) {
 		const percent = total > 0 ? value * 100 / total : 0;
 		return `${percent.toFixed(2)}%`;
 	}
 
-	// Refs to instances of the respective component
+	// Refs to instances of the respective components, values, and functions
 	let memory;
 	let cache;
 	let hits = 0;
 	let misses = 0;
-
-	// Refs to the log function and value of the Logger
 	let log;
 	let logContents;
 
@@ -56,7 +54,7 @@
 			const next = readTx.next();
 
 			if (next.done) {
-				value = new big.BigInteger(`${next.value}`);
+				value = new BigInteger(`${next.value}`);
 				readTx = null;
 				if (!history && explain === EXPLAIN_ON) {
 					log('Finished read operation');
@@ -95,6 +93,8 @@
 		cache.flush(memory, history ? () => {} : log);
 	}
 
+	// Returns the position in history of the last executed line (defaults to
+	// the most recent line)
 	function getHistoryPosition(logLines) {
 		let index = logLines.findIndex(line => line.startsWith(HISTORY_CURSOR));
 		if (index == -1) {
@@ -106,6 +106,7 @@
 	// Removes the history cursor
 	// Calling this function is problematic, since it will conflict with changes
 	// to logContents made inside Logger.svelte
+	// TODO: Figure out a way to safely call this function
 	function clearHistoryPosition() {
 		let needsReset = false;
 		let lines = splitLines(logContents);
@@ -123,6 +124,8 @@
 		}
 	}
 
+	// Changes the position in history by an offset (1 i.e. forward or -1 i.e.
+	// backward)
 	function changeHistoryPosition(increment) {
 		let lines = splitLines(logContents);
 		let position = getHistoryPosition(lines) + increment;
@@ -177,7 +180,7 @@
 			const parse = (parseW != null ? parseW : parseR);
 			address = parseInt(parse[1], 16);
 			if (parseW) {
-				value = new big.BigInteger(parse[2], 16);
+				value = new BigInteger(parse[2], 16);
 			}
 
 			if (parseW) {

@@ -50,7 +50,7 @@
 		let tmp = parsed;
 		if (oneCmp > 0) { // greater than one
 			ln2--;
-			while (tmp.compareTo(new big.BigDecimal('1')) > 0) {
+			while (tmp.compareTo(new big.BigDecimal('1')) >= 0) {
 				tmp = tmp.divide(new big.BigDecimal('2'));
 				ln2++;
 			}

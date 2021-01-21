@@ -1,6 +1,6 @@
 <script context='module'>
 	import {fmtHex} from './Binary.svelte';
-	import {log2, maxUnsigned} from '../scripts/math.js';
+	import {log2, maxUnsigned} from '../utils/math.js';
 
 	// Below functions are self-explanatory. Sizes are in bits.
 	export function cacheLineCount(cacheSize, blockSize) {

@@ -43,7 +43,7 @@
 <script>
 	import {fmtHex} from '../components/Binary.svelte';
 	import Container from '../components/Container.svelte';
-	import {splitLines} from '../scripts/strings.js';
+	import {splitLines} from '../utils/strings.js';
 
 	export let name = 'Heap';
 	export let colspan = null;

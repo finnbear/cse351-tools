@@ -1,3 +1,4 @@
+// Returns the string with only the first letter of each word uppercased
 export function toTitleCase(str) {
 	str = str || '';
 	const words = str.toLowerCase().split(' ');
@@ -10,6 +11,8 @@ export function toTitleCase(str) {
 	return processedWords.join(' ');
 }
 
+// Splits a string into an array of lines (no empty line at the end, even if
+// the string end in a newline)
 export function splitLines(str) {
 	if (!str) {
 		return [];
@@ -22,6 +25,8 @@ export function splitLines(str) {
 	return lines;
 }
 
+// Pluralizes a word based on whether count is 1 or something else.
+// Not guaranteed to work for cases not used by existing callers.
 export function plural(str, count) {
 	if (count == 1) {
 		return str;

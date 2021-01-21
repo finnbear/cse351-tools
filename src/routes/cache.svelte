@@ -9,8 +9,8 @@
 	import OptionsSlider from '../components/OptionsSlider.svelte';
 	import Select from '../components/Select.svelte';
 	import Slider from '../components/Slider.svelte';
-	import {log2} from '../scripts/math.js';
-	import {splitLines, plural} from '../scripts/strings.js';
+	import {log2} from '../utils/math.js';
+	import {splitLines, plural} from '../utils/strings.js';
 	import {BigInteger} from 'bigdecimal';
 
 	const HISTORY_CURSOR = '>';

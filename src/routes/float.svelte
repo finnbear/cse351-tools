@@ -1,6 +1,6 @@
 <script context=module>
 	import {BigDecimal, BigInteger} from 'bigdecimal';
-	import {maxUnsigned} from '../scripts/math.js';
+	import {maxUnsigned} from '../utils/math.js';
 
 	// Handles fractional binary and (de)normalization
 	function decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue) {

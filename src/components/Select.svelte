@@ -1,6 +1,6 @@
 <script>
 	import Container from './Container.svelte';
-	import {toTitleCase} from '../scripts/strings.js';
+	import {toTitleCase} from '../utils/strings.js';
 
 	export let name;
 	export let colspan = null;

@@ -1,6 +1,6 @@
 <script context='module'>
 	import {fmtHex} from './Binary.svelte';
-	import {maxUnsigned} from '../scripts/math.js';
+	import {maxUnsigned} from '../utils/math.js';
 
 	export const wordSize = 8; // bytes
 
@@ -25,7 +25,7 @@
 <script>
 	import Container from './Container.svelte';
 	import MemoryData from './MemoryData.svelte';
-	import {log2} from '../scripts/math.js';
+	import {log2} from '../utils/math.js';
 
 	export let name = 'Memory';
 	export let colspan = null;

@@ -4,7 +4,10 @@
 
 	// Handles fractional binary and (de)normalization
 	function decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue) {
+		// Normalized vs. Denormalized checked here
 		let mantissa = new BigDecimal(exponentValue.compareTo(new BigInteger('0')) == 0 ? '0' : '1');
+
+		// Convert to string and process 1 and 0 characters (there may be a better way)
 		const mantissaBitsString = mantissaValue.toString(2).padStart(mantissaSize, '0');
 		for (let i = 0; i < mantissaBitsString.length; i++) {
 			if (mantissaBitsString[i] == '1') {
@@ -19,6 +22,7 @@
 		if (power >= 0) {
 			return (new BigDecimal('2')).pow(power);
 		}
+		// BigDecimal's pow doesn't support negative powers, so find it manually
 		return (new BigDecimal('1')).divide((new BigDecimal('2')).pow(-power));
 	}
 
@@ -36,21 +40,26 @@
 		try {
 			 parsed = (new BigDecimal(value)).abs();
 		} catch (err) {
+			// infinity and -infinity are the only non-number cases that are not NaN
 			if (value.toLowerCase() == 'infinity' || value.toLowerCase() == '-infinity') {
 				return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('0')};
 			}
+
+			// NaN
 			return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('1')};
 		}
 
+		// Zero
 		if (parsed.compareTo(new BigDecimal('0')) == 0) {
 			return {sign, exponent: new BigInteger('0'), mantissa: new BigInteger('0')};
 		}
 
+		// Infinities
 		if (parsed.compareTo(maxValue(exponentSize, mantissaSize)) > 0) {
-			// Infinities
 			return {sign, exponent: new BigInteger(`${maxUnsigned(exponentSize)}`), mantissa: new BigInteger('0')};
 		}
 
+		// Find exponent (log base 2)
 		let ln2 = 0;
 		const oneCmp = parsed.compareTo(new BigDecimal('1'));
 		let tmp = parsed;
@@ -70,16 +79,18 @@
 		let exponent, mantissaDecimal;
 
 		if (ln2 >= 1 - exponentBias(exponentSize)) {
+			// Normalized
 			exponent = new BigInteger(`${ln2 + exponentBias(exponentSize)}`);
 			mantissaDecimal = parsed.multiply(powerOf2(mantissaSize - ln2)).subtract(powerOf2(mantissaSize));
 		} else {
+			// Denormalized
 			exponent = new BigInteger('0');
 			mantissaDecimal = parsed.divide(powerOf2(1 - exponentBias(exponentSize) - mantissaSize));
 		}
 
 		let mantissa = mantissaDecimal.toBigInteger();
 
-		// round
+		// Round mantissa
 		if (mantissaDecimal.subtract(new BigDecimal(mantissa.toString())).compareTo(new BigDecimal('0.5')) >= 0) {
 			mantissa = mantissa.add(new BigInteger('1'));
 		}
@@ -88,12 +99,15 @@
 	}
 
 	// Returns a type that is stringifyable and, if possible, a BigDecimal,
-	// based on the sign, exponent, and mantissa
+	// based on the sign, exponent, and mantissa. The stringifyable type is
+	// used to guarantee that all special cases are displayable (even if they
+	// cannot be represented by a BigDecimal e.g. Infinity)
 	function decode(signValue, exponentSize, exponentValue, mantissaSize, mantissaValue) {
 		const negative = signValue.compareTo(new BigInteger('1')) == 0;
 		const sign = new BigDecimal(negative ? '-1' : '1');
 		const mantissa = decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue);
 
+		// Use a string of bits to decode the exponent
 		let exponent = 0;
 		const exponentBitsString = exponentValue.toString(2);
 		for (let i = 0; i < exponentBitsString.length; i++) {
@@ -102,25 +116,39 @@
 			}
 		}
 
+		// Zero
 		if (exponent == 0 && mantissaValue.compareTo(new BigDecimal('0')) == 0) {
 			// BigDecimal cannot encode negative zero
 			const bigZero = new BigDecimal('0');
 			return {str: negative ? '-0' : '0', big: bigZero, exponent: 'Zero', mantissa: 'Zero'};
 		}
+
+		// Infinity
 		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new BigDecimal('0')) == 0) {
 			// BigDecimal has no concept of infinity
 			return {str: negative ? '-Infinity' : 'Infinity', exponent: 'All Ones', mantissa: 'Zero'};
 		}
+
+		// NaN
 		if (exponent == maxUnsigned(exponentSize) && mantissaValue.compareTo(new BigDecimal('0')) != 0) {
 			// BigDecimal has no concept of NaN
 			return {str: 'NaN', exponent: 'All Ones', mantissa: 'Non-Zero'};
 		}
+
+		// Denormalization
 		if (exponent == 0) {
 			// Denormalized, mantissa has already been calculated as such
+			// only need to fix exponent
 			exponent = 1;
 		}
+
+		// Exponent bias
 		exponent -= exponentBias(exponentSize);
+
+		// Calculate final result
 		const result = sign.multiply(mantissa.multiply(powerOf2(exponent))).stripTrailingZeros();
+
+		// Representable by BigDecimal so simply use result.toString() for str
 		return {str: result.toString(), big: result, exponent, mantissa};
 	}
 
@@ -148,13 +176,14 @@
 	let exponent = new BigInteger('0');
 	let mantissa = new BigInteger('0');
 
-	// Text input
+	// Text input of decimal target value
 	let textValue = '';
 
 	// Encoding parameters
 	let mantissaSize = 23;
 	let exponentSize = 8;
 
+	// Changing bits of the float invalidates the decimal target value text
 	function clearText() {
 		textValue = '';
 	}

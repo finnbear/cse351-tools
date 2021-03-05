@@ -167,17 +167,17 @@
 
 <table>
 	<tr>
-		<Heap colspan={4} onFree={mallocTx ? null : doFree.bind(this, pushHistory)} bind:this={heap}/>
+		<Heap colspan={4} onFree={mallocTx ? null : doFree.bind(null, pushHistory)} bind:this={heap}/>
 	</tr>
 	<tr>
 		<Integer name='Malloc Size' description='The size, in bytes, to allocate' disabled={mallocTx} bind:value={mallocSizeBigInt}/>
 		<Button name='Malloc' description='Allocates a new block' disabled={!mallocSize || freeTx} on:click={() => doMalloc(pushHistory, mallocSize)}>{mallocTx ? 'Next...' : 'Malloc'}</Button>
 		<Select name='Explain' description='Allocates and frees step by step' options={EXPLAIN_OPTIONS} bind:value={explain}/>
-		<Button name='Undo' description='Reverses the last operation' disabled={historyIndex == 0 || mallocTx || freeTx} on:click={undo}>Undo</Button>
+		<Button name='Undo' description='Reverses the last operation' disabled={historyIndex === 0 || mallocTx || freeTx} on:click={undo}>Undo</Button>
 	</tr>
 	<tr>
 		<Container colspan={2} name='Status'>{status || 'Nothing has happened yet'}</Container>
 		<Button name='Export History' description='Downloads history of operations' disabled={!status} on:click={doExport}/>
-		<Button name='Redo' description='Like undo but for undo' disabled={historyIndex == history.length || mallocTx || freeTx} on:click={redo}>Redo</Button>
+		<Button name='Redo' description='Like undo but for undo' disabled={historyIndex === history.length || mallocTx || freeTx} on:click={redo}>Redo</Button>
 	</tr>
 </table>

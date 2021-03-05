@@ -43,7 +43,7 @@
 					mallocTx = null;
 					status = 'Finished malloc operation';
 					break;
-				} else if (explain === EXPLAIN_ON && !pushHistory) {
+				} else if (explain === EXPLAIN_ON && pushHistory) {
 					status = next.value;
 				}
 			} catch (err) {
@@ -74,7 +74,7 @@
 					freeTx = null;
 					status = 'Finished free operation';
 					break;
-				} else if (explain === EXPLAIN_ON && !pushHistory) {
+				} else if (explain === EXPLAIN_ON && pushHistory) {
 					status = next.value;
 				}
 			} catch (err) {

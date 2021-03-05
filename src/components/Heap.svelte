@@ -49,22 +49,34 @@
 	export let colspan = null;
 	export let onFree;
 
-	let size = SIZE_INCREMENT;
-	let blockIDCount = 0;
-	let history = '';
-
 	// The following was adapted from
 	// https://courses.cs.washington.edu/courses/cse351/heapsim/
 
-	const initialBlock = {
-		size,
-		offset: 0,
-		precedingUsed: true,
-		used: false
-	};
-	let freeListHead = initialBlock;
-	let heapHead = initialBlock;
-	let highlightedBlock = null;
+	let size;
+	let blockIDCount;
+	let freeListHead;
+	let heapHead;
+	let highlightedBlock;
+
+	export function reset() {
+		size = SIZE_INCREMENT;
+		blockIDCount = 0;
+		const initialBlock = {
+			size,
+			offset: 0,
+			precedingUsed: true,
+			used: false
+		};
+		freeListHead = initialBlock;
+		heapHead = initialBlock;
+		highlightedBlock = null;
+	}
+
+	reset();
+
+	export function getBlockIDCount() {
+		return blockIDCount;
+	}
 
 	// Causes the view to update
 	function refreshDisplay() {
@@ -194,7 +206,7 @@
 
 	// Uses yield keyboard to return step by step status information without
 	// extra context-switching logic
-	export function* malloc(requestedSize) {
+	export function* malloc(requestedSize, pushHistory) {
 		// Step 1: Calculate required size
 		let requiredSize = (Math.floor(requestedSize / WORD_SIZE) + Math.sign(requestedSize % WORD_SIZE)) * WORD_SIZE;
 		requiredSize += WORD_SIZE;
@@ -272,13 +284,15 @@
 
 		// Update history
 		freeBlock.id = blockIDCount;
-		history += `a ${freeBlock.id} ${requestedSize}\n`
+		if (pushHistory) {
+			pushHistory(`a ${freeBlock.id} ${requestedSize}`);
+		}
 		blockIDCount++;
 
 		return offset;
 	}
 
-	export function* free(offset) {
+	export function* free(offset, pushHistory) {
 		// Step 1. Look through heap for the appropriate block
 		let allocBlock = getBlockWithPayloadOffset(offset);
 
@@ -306,7 +320,9 @@
 		highlightedBlock = null;
 
 		// Update history
-		history += `f ${allocBlock.id}\n`
+		if (pushHistory) {
+			pushHistory(`f ${allocBlock.id}`);
+		}
 
 		let originalSize = allocBlock.size;
 		allocBlock = coalesceFreeBlock(allocBlock);
@@ -314,12 +330,6 @@
 		yield originalSize < allocBlock.size ? 'Block coalesced.' : 'Block not coalesced.';
 
 		return;
-	}
-
-	// Gets a data URI of the operation history in standard format
-	export function getHistory() {
-		// metadata: unused, num block ids, num ops, unused
-		return content = `data:text/plain;charset=utf-8,0\n${blockIDCount}\n${splitLines(history).length}\n0\n${history}`;
 	}
 
 	// Returns data representing an SVG arc between two x and y coordinates

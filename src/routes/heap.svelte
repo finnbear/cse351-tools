@@ -21,9 +21,15 @@
 
 	// Button actions
 	let mallocTx;
-	function doMalloc() {
+	let freeTx;
+	function doMalloc(pushHistory, mallocSize) {
+		if (freeTx) {
+			return;
+		}
+		let offset = null;
+
 		if (!mallocTx) {
-			mallocTx = heap.malloc(mallocSize);
+			mallocTx = heap.malloc(mallocSize, pushHistory);
 			if (!mallocTx) {
 				return;
 			}
@@ -33,11 +39,11 @@
 				const next = mallocTx.next();
 
 				if (next.done) {
-					console.log(next.value);
+					offset = next.value;
 					mallocTx = null;
 					status = 'Finished malloc operation';
 					break;
-				} else if (explain === EXPLAIN_ON) {
+				} else if (explain === EXPLAIN_ON && !pushHistory) {
 					status = next.value;
 				}
 			} catch (err) {
@@ -45,13 +51,17 @@
 				status = err;
 				break;
 			}
-		} while (explain === EXPLAIN_OFF);
+		} while (explain === EXPLAIN_OFF || !pushHistory);
+
+		return offset;
 	}
 
-	let freeTx;
-	function doFree(offset) {
+	function doFree(pushHistory, offset) {
+		if (mallocTx) {
+			return;
+		}
 		if (!freeTx) {
-			freeTx = heap.free(offset);
+			freeTx = heap.free(offset, pushHistory);
 			if (!freeTx) {
 				return;
 			}
@@ -64,7 +74,7 @@
 					freeTx = null;
 					status = 'Finished free operation';
 					break;
-				} else if (explain === EXPLAIN_ON) {
+				} else if (explain === EXPLAIN_ON && !pushHistory) {
 					status = next.value;
 				}
 			} catch (err) {
@@ -72,14 +82,83 @@
 				status = err;
 				break;
 			}
-		} while (explain === EXPLAIN_OFF);
+		} while (explain === EXPLAIN_OFF || !pushHistory);
+	}
+
+	const history = [];
+	let historyIndex = 0;
+
+	function pushHistory(line) {
+		if (history.length > historyIndex) {
+			// invalidate redo buffer
+			history.length = historyIndex;
+		}
+		history.push(line);
+		historyIndex++;
+	}
+
+	function replayHistory() {
+		heap.reset();
+		const offsets = {};
+		for (let i = 0; i < historyIndex; i++) {
+			const line = history[i];
+			const segments = line.split(' ');
+			const blockID = parseInt(segments[1]);
+			if (isNaN(blockID)) {
+				throw new Error('mallformed blockID in history');
+			}
+			switch (segments[0]) {
+				case 'a':
+					mallocSize = parseInt(segments[2]);
+					if (isNaN(mallocSize)) {
+						throw new Error('mallformed mallocSize in history');
+					}
+					const offset = doMalloc(null, mallocSize);
+					offsets[blockID] = offset;
+					break;
+				case 'f':
+					if (!(blockID in offsets)) {
+						throw new Error('unrecognized blockID in history');
+					}
+					doFree(null, offsets[blockID])
+					break;
+			}
+		}
+	}
+
+	function undo() {
+		if (historyIndex == 0) {
+			return; // nothing to undo
+		}
+		historyIndex--;
+		replayHistory();
+	}
+
+	function redo() {
+		if (historyIndex == history.length) {
+			return; // nothing to redo
+		}
+		historyIndex++;
+		replayHistory();
+	}
+
+	// Gets a data URI of the operation history in standard format
+	export function fmtHistory() {
+		let lines = '';
+
+		for (let i = 0; i < historyIndex; i++) {
+			lines += history[i] + '\n';
+		}
+
+		// metadata: unused, num block ids, num ops, unused
+		return content = `data:text/plain;charset=utf-8,0\n${heap.getBlockIDCount()}\n${historyIndex}\n0\n${lines}`;
 	}
 
 	// Automatically initiates the process of saving a history file
 	function doExport() {
 		const link = document.createElement('a');
 		link.download = 'heap.rep';
-		link.href = encodeURI(heap.getHistory());
+		link.href = encodeURI(fmtHistory());
 		document.body.appendChild(link);
 		link.click();
 		document.body.removeChild(link);
@@ -88,15 +167,17 @@
 
 <table>
 	<tr>
-		<Heap colspan={3} onFree={doFree} bind:this={heap}/>
+		<Heap colspan={4} onFree={mallocTx ? null : doFree.bind(this, pushHistory)} bind:this={heap}/>
 	</tr>
 	<tr>
 		<Integer name='Malloc Size' description='The size, in bytes, to allocate' disabled={mallocTx} bind:value={mallocSizeBigInt}/>
-		<Button name='Malloc' description='Allocates a new block' disabled={!mallocSize} on:click={doMalloc}>{mallocTx ? 'Next...' : 'Malloc'}</Button>
+		<Button name='Malloc' description='Allocates a new block' disabled={!mallocSize || freeTx} on:click={() => doMalloc(pushHistory, mallocSize)}>{mallocTx ? 'Next...' : 'Malloc'}</Button>
 		<Select name='Explain' description='Allocates and frees step by step' options={EXPLAIN_OPTIONS} bind:value={explain}/>
+		<Button name='Undo' description='Reverses the last operation' disabled={historyIndex == 0 || mallocTx || freeTx} on:click={undo}>Undo</Button>
 	</tr>
 	<tr>
 		<Container colspan={2} name='Status'>{status || 'Nothing has happened yet'}</Container>
 		<Button name='Export History' description='Downloads history of operations' disabled={!status} on:click={doExport}/>
+		<Button name='Redo' description='Like undo but for undo' disabled={historyIndex == history.length || mallocTx || freeTx} on:click={redo}>Redo</Button>
 	</tr>
 </table>

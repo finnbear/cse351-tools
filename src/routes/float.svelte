@@ -167,6 +167,7 @@
 
 <script>
 	import Binary from '../components/Binary.svelte';
+	import Button from '../components/Button.svelte';
 	import Container from '../components/Container.svelte';
 	import Text from '../components/Text.svelte';
 	import Slider from '../components/Slider.svelte';
@@ -188,6 +189,26 @@
 		textValue = '';
 	}
 
+	// Sets float to the next value
+	function incrementBits() {
+		clearText();
+
+		// Binary carrying
+		const maxMantissa = (new BigInteger('2')).pow(mantissaSize).subtract(new BigInteger('1'));
+		if (mantissa.compareTo(maxMantissa) == 0) {
+			const maxExponent = (new BigInteger('2')).pow(exponentSize).subtract(new BigInteger('1'));
+			if (exponent.compareTo(maxExponent) == 0) {
+				sign = new BigInteger('1').subtract(sign)
+				exponent = new BigInteger('0');
+			} else {
+				exponent = exponent.add(new BigInteger('1'));
+			}
+			mantissa = new BigInteger('0');
+		} else {
+			mantissa = mantissa.add(new BigInteger('1'));
+		}
+	}
+
 	// Keeps combinedBits up to date by running every time any parameter changes
 	$: combinedBits = combineBits(sign, exponentSize, exponent, mantissaSize, mantissa);
 
@@ -207,32 +228,31 @@
 
 <table>
 	<tr>
-		<Binary name='Sign Bit' size={1} fmt={sign => sign.compareTo(new BigInteger('1')) == 0 ? 'Negative' : 'Positive'} bind:value={sign} onChange={clearText}/>
+		<Slider name='Exponent Size' colspan={4} description='The size, in bits, of the exponent' min={1} max={11} bind:value={exponentSize}/>
 	</tr>
 	<tr>
-		<Slider name='Exponent Size' description='The size, in bits, of the exponent' min={1} max={11} bind:value={exponentSize}/>
+		<Binary name='Sign Bit' colspan={1} size={1} fmt={sign => sign.compareTo(new BigInteger('1')) == 0 ? 'Negative' : 'Positive'} bind:value={sign} onChange={clearText}/>
+		<Binary name='Exponent Value' colspan={3} size={exponentSize} fmt={() => decoded.exponent} bind:value={exponent} onChange={clearText}/>
 	</tr>
 	<tr>
-		<Binary name='Exponent Value' size={exponentSize} fmt={() => decoded.exponent} bind:value={exponent} onChange={clearText}/>
+		<Slider name='Mantissa Size' colspan={4} description='The size, in bits, of the mantissa' min={1} max={52} bind:value={mantissaSize}/>
 	</tr>
 	<tr>
-		<Slider name='Mantissa Size' description='The size, in bits, of the mantissa' min={1} max={52} bind:value={mantissaSize}/>
+		<Binary name='Mantissa Value' colspan={4} size={mantissaSize} fmt={() => decoded.mantissa} bind:value={mantissa} onChange={clearText}/>
 	</tr>
 	<tr>
-		<Binary name='Mantissa Value' size={mantissaSize} fmt={() => decoded.mantissa} bind:value={mantissa} onChange={clearText}/>
+		<Binary name={`Combined Bits (${1 + exponentSize + mantissaSize})`} colspan={3} size={1 + exponentSize + mantissaSize} value={combinedBits} readOnly={true}/>
+		<Button name='Increment' description='Add 1 to bits' on:click={incrementBits}/>
 	</tr>
 	<tr>
-		<Binary name={`Combined Bits (${1 + exponentSize + mantissaSize})`} size={1 + exponentSize + mantissaSize} value={combinedBits} readOnly={true}/>
+		<Text name='Decimal Target Value' colspan={4} description='The sign, exponent, and mantissa will be changed to reach or approach this value' bind:value={textValue}/>
 	</tr>
 	<tr>
-		<Text name='Decimal Target Value' description='The sign, exponent, and mantissa will be changed to reach or approach this value' bind:value={textValue}/>
-	</tr>
-	<tr>
-		<Container name={`Exact Value Represented By Float`} description='The exact value represented by the sign, exponent, and mantissa'><span><b>{decoded.str}</b></span></Container>
+		<Container name={`Exact Value Represented By Float`} colspan={4} description='The exact value represented by the sign, exponent, and mantissa'><span><b>{decoded.str}</b></span></Container>
 	</tr>
 	{#if textValue && decoded.big}
 		<tr>
-			<Container name={`Conversion Error From Target Value`} description={'The exact value of the float minus the target value'}><span>{decoded.big.subtract(new BigDecimal(textValue))}</span></Container>
+			<Container name={`Conversion Error From Target Value`} colspan={4} description={'The exact value of the float minus the target value'}><span>{decoded.big.subtract(new BigDecimal(textValue))}</span></Container>
 		</tr>
 	{/if}
 </table>

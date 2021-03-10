@@ -30,7 +30,7 @@
 	}
 
 	main {
-		margin: auto;
+		margin: 2em auto;
 		max-width: 900px;
 		padding: 10px;
 		position: relative;

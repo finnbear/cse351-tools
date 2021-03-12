@@ -375,8 +375,9 @@
 					<!-- Header -->
 					<rect class='header word' x={padding + block.offset / WORD_SIZE * wordWidth} y={padding} width={wordWidth} height={wordHeight}/>
 					<text class='header' x={padding + wordPadding + block.offset / WORD_SIZE * wordWidth} y={padding + freeFont + wordPadding} font-size={`${freeFont}px`} alignment-baseline='middle'>{block.size}</text>
-					<text class='header' x={padding + wordPadding + block.offset / WORD_SIZE * wordWidth} y={padding + (freeFont + wordPadding) * 2} font-size={`${freeFont}px`} alignment-baseline='middle'>{boolToBit(block.used)}</text>
-					<text class='header' x={padding + wordPadding + block.offset / WORD_SIZE * wordWidth} y={padding + (freeFont + wordPadding) * 3} font-size={`${freeFont}px`} alignment-baseline='middle'>{boolToBit(block.precedingUsed)}</text>
+					<text class='header' x={padding + wordPadding + block.offset / WORD_SIZE * wordWidth} y={padding + (freeFont + wordPadding) * 2} font-size={`${freeFont}px`} alignment-baseline='middle'>{boolToBit(block.precedingUsed)}</text>
+					<text class='header' x={padding + wordPadding + block.offset / WORD_SIZE * wordWidth} y={padding + (freeFont + wordPadding) * 3} font-size={`${freeFont}px`} alignment-baseline='middle'>{boolToBit(block.used)}</text>
+
 
 					{#if block.used}
 						{#if onFree}

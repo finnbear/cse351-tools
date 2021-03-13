@@ -41,10 +41,17 @@
 	let log;
 	let logContents;
 
-	// Button actions
+	// Read and write transactions (useful for determining if there is an
+	// operation currently being performed)
 	let readTx;
+	let writeTx;
+
+	// Completes a whole read, or one step of a read if explanation is warranted
+	// and function is not performing historical operation (!history)
 	function doRead(history) {
 		if (!readTx) {
+			// cache.read is a generator function that returns what amounts
+			// to an iterator
 			readTx = cache.read(memory, address, history ? () => {} : log);
 			if (!readTx) {
 				return;
@@ -66,7 +73,8 @@
 		} while (history || explain === EXPLAIN_OFF);
 	}
 
-	let writeTx;
+	// Completes a whole write, or one step of a write if explanation is warranted
+	// and function is not performing historical operation (!history)
 	function doWrite(history) {
 		if (!writeTx) {
 			writeTx = cache.write(memory, address, parseInt(value.toString()) & 255, history ? () => {} : log);
@@ -89,6 +97,7 @@
 		} while (history || explain === EXPLAIN_OFF);
 	}
 
+	// Flushes the cache (optionally writes message to history)
 	function doFlush(history) {
 		cache.flush(memory, history ? () => {} : log);
 	}
@@ -193,6 +202,8 @@
 
 	// Invalidate transactions when settings are changed
 	$: {
+		// The changing of any variable used in this expression will trigger an
+		// execution of this block
 		const key = addressSize + cacheSize + associativity + blockSize;
 		readTx = null;
 		writeTx = null;
@@ -214,7 +225,7 @@
 	</tr>
 	<tr>
 		<Memory colspan={2} name={'Physical Memory'} bind:address {addressSize} bind:this={memory}/>
-		<Cache colspan={2} bind:selectedAddress={address} bind:hits bind:misses {addressSize} {cacheSize} {blockSize} {associativity} {writeHit} {writeMiss} {replacement} {explain} bind:this={cache}/>
+		<Cache colspan={2} bind:selectedAddress={address} bind:hits bind:misses {addressSize} {cacheSize} {blockSize} {associativity} {writeHit} {writeMiss} {replacement} bind:this={cache}/>
 	</tr>
 	<tr>
 		<Container name='Address' description='Click a memory cell'>

@@ -19,9 +19,18 @@
 	// Compnent ref
 	let heap;
 
-	// Button actions
+	// Malloc and free transactions (useful for determining if there is an
+	// operation currently being performed)
 	let mallocTx;
 	let freeTx;
+
+	// If pushHistory is passed in, the operation is treated as a user initiated
+	// action, worthy of changing the explanation if applicable. Otherwise,
+	// it is treated as a replay history action, and no additional history or
+	// status updates will be generated.
+	//
+	// heap.malloc is a generator function that returns what essentially amounts
+	// to an iterator.
 	function doMalloc(pushHistory, mallocSize) {
 		if (freeTx) {
 			return;
@@ -85,9 +94,12 @@
 		} while (explain === EXPLAIN_OFF || !pushHistory);
 	}
 
+	// History, as an array of lines
 	const history = [];
 	let historyIndex = 0;
 
+	// Pushes a line to history, invalidating the redo buffer
+	// if it exists
 	function pushHistory(line) {
 		if (history.length > historyIndex) {
 			// invalidate redo buffer
@@ -97,9 +109,16 @@
 		historyIndex++;
 	}
 
+	// Resets the heap and replays historical operations up until the current
+	// historyIndex
 	function replayHistory() {
 		heap.reset();
+
+		// This is the only segment of code that actually keeps track
+		// of block IDs as opposed to block offsets, using this map
+		// of blockID to offset.
 		const offsets = {};
+
 		for (let i = 0; i < historyIndex; i++) {
 			const line = history[i];
 			const segments = line.split(' ');
@@ -126,6 +145,8 @@
 		}
 	}
 
+	// Undo and redo work by replaying the entire history, plus or minus a
+	// single operation, which works since heap operations are deterministic
 	function undo() {
 		if (historyIndex == 0) {
 			return; // nothing to undo

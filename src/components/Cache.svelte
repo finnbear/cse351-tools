@@ -7,22 +7,27 @@
 		return cacheSize / blockSize;
 	}
 
+	// Calculates the number of cache sets
 	export function cacheSetCount(cacheSize, blockSize, associativity) {
 		return cacheLineCount(cacheSize, blockSize) / associativity;
 	}
 
+	// Calculates offset size in bits
 	export function offsetSize(blockSize) {
 		return log2(blockSize);
 	}
 
+	// Calculates set index size in bits
 	export function indexSize(cacheSize, blockSize, associativity) {
 		return log2(cacheSetCount(cacheSize, blockSize, associativity));
 	}
 
+	// Calculates tag size in bits
 	export function tagSize(addressSize, cacheSize, blockSize, associativity) {
 		return Math.max(0, addressSize - indexSize(cacheSize, blockSize, associativity) - offsetSize(blockSize));
 	}
 
+	// Gets the offset of an address within a block, given cache parameters
 	export function getOffset(address, blockSize) {
 		if (address == null) {
 			return null;
@@ -30,6 +35,7 @@
 		return address % blockSize;
 	}
 
+	// Gets the set index of an address within a block, given cache parameters
 	export function getIndex(address, cacheSize, blockSize, associativity) {
 		if (address == null) {
 			return null;
@@ -37,6 +43,7 @@
 		return (address >> offsetSize(blockSize)) % Math.pow(2, indexSize(cacheSize, blockSize, associativity));
 	}
 
+	// Gets the tag of an address within a block, given cache parameters
 	export function getTag(address, addressSize, cacheSize, blockSize, associativity) {
 		if (address == null) {
 			return null;
@@ -98,6 +105,7 @@
 		}
 	}
 
+	// Returns whether a given address exists in the memory's address space
 	function validAddress(address) {
 		if (address == null) {
 			return false;

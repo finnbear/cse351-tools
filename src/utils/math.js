@@ -1,3 +1,5 @@
+// Math functions in this file operate on Numbers, not BigIntegers.
+
 // Returns log base 2 of the given number
 export function log2(number) {
 	return Math.log(number) / Math.LN2;

@@ -6,6 +6,9 @@
 	export let colspan = null;
 	export let rowspan = null;
 	export let description = '';
+
+	// TODO: Investigate whether using an array of lines is better than a string
+	// with newlines
 	export let value = '';
 
 	export function log(line) {

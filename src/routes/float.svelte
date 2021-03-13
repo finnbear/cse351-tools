@@ -4,7 +4,7 @@
 
 	// Handles fractional binary and (de)normalization
 	function decodeMantissa(mantissaSize, mantissaValue, exponentSize, exponentValue) {
-		// Normalized vs. Denormalized checked here
+		// Normalized vs. denormalized checked here
 		let mantissa = new BigDecimal(exponentValue.compareTo(new BigInteger('0')) == 0 ? '0' : '1');
 
 		// Convert to string and process 1 and 0 characters (there may be a better way)

@@ -2,6 +2,7 @@
 	import Nav from '../components/Nav.svelte';
 	import {slide} from 'svelte/transition';
 
+	// The current route e.g. 'integer'
 	export let segment;
 
 	// Map of path (must match src/routes filenames) to title

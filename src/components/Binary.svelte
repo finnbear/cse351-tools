@@ -33,7 +33,7 @@
 	export const FORM_TWOS_COMPLEMENT = 'two\'s-complement';
 	export const FORM_OPTIONS = [FORM_UNSIGNED, FORM_TWOS_COMPLEMENT];
 
-	export const ENDIANNESS_IGNORED = 'ignored';
+	export const ENDIANNESS_IGNORED = 'ignored'; // ignored means big endian but without spaces between bytes
 	export const ENDIANNESS_LITTLE = 'little';
 	export const ENDIANNESS_BIG = 'big';
 	export const ENDIANNESS_OPTIONS = [ENDIANNESS_IGNORED, ENDIANNESS_LITTLE, ENDIANNESS_BIG];

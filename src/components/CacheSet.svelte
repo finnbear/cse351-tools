@@ -123,6 +123,7 @@
 		return line.read(offset);
 	}
 
+	// Generator function, so can yield intermediate status
 	export function* write(memory, address, byte, log, updateStats) {
 		yield `Tag identified as ${fmtTag(address)}`;
 		yield `Set index identified as ${fmtIndex(address)}`;

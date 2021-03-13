@@ -28,7 +28,7 @@
 		<Select name='Endianness' description='The order of the bytes in memory' disabled={size <= 8} bind:value={endianness} options={ENDIANNESS_OPTIONS}/>
 	</tr>
 	<tr>
-		<Binary colspan={3} name='Bits' {size} {form} endianness={size > 8 ? endianness : ENDIANNESS_IGNORED} showLimits={true} bind:value bind:increment bind:shiftLeft bind:shiftRight/>
+		<Binary colspan={3} name='Bits' {size} {form} endianness={size > 8 ? endianness : ENDIANNESS_IGNORED} bind:value bind:increment bind:shiftLeft bind:shiftRight/>
 	</tr>
 	<tr>
 		<Button name='Increment' description='Adds 1 to the binary representation' on:click={increment}/>

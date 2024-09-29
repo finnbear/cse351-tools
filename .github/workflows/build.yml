@@ -43,7 +43,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v2
         with:
-          path: './__sapper__/cse351-tools/'
+          path: './__sapper__/export/cse351-tools/'
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v2

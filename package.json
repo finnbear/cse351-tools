@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "sapper dev",
     "build": "sapper build --legacy",
-    "export": "sapper export --legacy --basepath /finnb/cse351sim",
+    "export": "sapper export --legacy --basepath /cse351-tools",
     "start": "node __sapper__/build"
   },
   "dependencies": {
